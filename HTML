@@ -1,0 +1,1514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NEA Tracking — Outreach Agent (Light Web MVP)</title>
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #fbfcff;
+      --text: #111827;
+      --muted: #6b7280;
+      --muted-2:#9ca3af;
+      --border:#e5e7eb;
+
+      --brand:#4f46e5;         /* indigo */
+      --brand-2:#06b6d4;       /* cyan */
+      --good:#10b981;          /* green */
+      --warn:#f59e0b;          /* amber */
+      --bad:#ef4444;           /* red */
+      --info:#3b82f6;          /* blue */
+
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 30px rgba(17,24,39,.08);
+      --shadow-sm: 0 4px 14px rgba(17,24,39,.06);
+
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(79,70,229,.10), transparent 60%),
+        radial-gradient(900px 500px at 110% 0%, rgba(6,182,212,.10), transparent 60%),
+        var(--bg);
+    }
+
+    a{color:inherit; text-decoration:none}
+    button{font-family:inherit}
+
+    /* App shell */
+    .shell{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Sticky full-width alerts */
+    .alertsBar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background: rgba(255,255,255,.82);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .alertsInner{
+      max-width: 1240px;
+      margin:0 auto;
+      padding:12px 18px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .alertsLeft{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width: 260px;
+    }
+    .brandMark{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow: 0 12px 26px rgba(79,70,229,.18);
+      flex:0 0 auto;
+    }
+    .brandText{
+      line-height:1.15;
+    }
+    .brandText b{display:block; font-size:13px}
+    .brandText span{display:block; font-size:12px; color:var(--muted)}
+    .alertsRight{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex: 1;
+      justify-content:flex-end;
+      min-width:0;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      padding:8px 10px;
+      font-size:12px;
+      color:var(--muted);
+      box-shadow: var(--shadow-sm);
+      white-space:nowrap;
+    }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      padding:8px 12px;
+      min-width: 320px;
+      box-shadow: var(--shadow-sm);
+      max-width: 520px;
+      width: 100%;
+    }
+    .search input{
+      border:none;
+      outline:none;
+      background:transparent;
+      width:100%;
+      font-size:13px;
+      color:var(--text);
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      background: var(--surface);
+      padding:9px 12px;
+      border-radius: 12px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: var(--shadow-sm);
+      font-size:13px;
+    }
+    .btn:hover{border-color:#d1d5db}
+    .btn.primary{
+      background: rgba(79,70,229,.10);
+      border-color: rgba(79,70,229,.25);
+      color:#1f1c7a;
+    }
+    .btn.primary:hover{background: rgba(79,70,229,.14)}
+    .btn.ghost{
+      background: transparent;
+      box-shadow:none;
+    }
+    .btn:active{transform: translateY(1px)}
+
+    .nav{
+      display:flex; gap:6px; align-items:center;
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      padding:4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav a{
+      padding:8px 10px;
+      border-radius: 999px;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .nav a.active{
+      background: rgba(79,70,229,.10);
+      color:#1f1c7a;
+    }
+
+    /* Main content container */
+    .container{
+      width:100%;
+      max-width:1240px;
+      margin:0 auto;
+      padding:18px;
+      flex:1;
+    }
+
+    .pageHeader{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-end;
+      margin: 8px 0 14px;
+    }
+    .pageHeader h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:-.02em;
+    }
+    .pageHeader p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      max-width: 64ch;
+    }
+
+    /* Cards */
+    .card{
+      background: var(--surface);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHd{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .cardHd .title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .cardHd h2{
+      margin:0;
+      font-size:13px;
+      letter-spacing:.06em;
+      text-transform: uppercase;
+      color:var(--muted);
+    }
+    .cardBd{padding:14px}
+
+    /* Status badges */
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: var(--surface);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .dot{width:9px;height:9px;border-radius:999px;background:#9ca3af}
+    .tag.good{border-color: rgba(16,185,129,.25); background: rgba(16,185,129,.10); color:#065f46}
+    .tag.good .dot{background: var(--good)}
+    .tag.warn{border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.10); color:#92400e}
+    .tag.warn .dot{background: var(--warn)}
+    .tag.bad{border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.10); color:#7f1d1d}
+    .tag.bad .dot{background: var(--bad)}
+    .tag.info{border-color: rgba(59,130,246,.25); background: rgba(59,130,246,.10); color:#1e3a8a}
+    .tag.info .dot{background: var(--info)}
+
+    /* Alerts strip (inside bar) */
+    .alertStrip{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom: 2px;
+      max-width: 760px;
+      width:100%;
+    }
+    .alertCard{
+      min-width: 260px;
+      max-width: 360px;
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding:10px 10px;
+      box-shadow: var(--shadow-sm);
+      cursor:pointer;
+      flex: 0 0 auto;
+    }
+    .alertCard:hover{
+      border-color: rgba(79,70,229,.35);
+      box-shadow: 0 10px 30px rgba(79,70,229,.10);
+    }
+    .alertTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .alertTitle{
+      font-weight:800;
+      font-size:13px;
+      margin:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 220px;
+    }
+    .alertMeta{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .alertReason{
+      margin-top:8px;
+      font-size:12px;
+      color:#111827;
+    }
+
+    /* Database table */
+    .tableWrap{
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing:0;
+      font-size:13px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:1;
+      text-align:left;
+      background: var(--surface-2);
+      color:var(--muted);
+      font-weight:800;
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      border-bottom:1px solid var(--border);
+      padding:12px 12px;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding:12px 12px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      background: var(--surface);
+    }
+    tbody tr{
+      cursor:pointer;
+    }
+    tbody tr:hover td{
+      background: rgba(79,70,229,.04);
+    }
+    tbody tr.selected td{
+      background: rgba(79,70,229,.08);
+    }
+    .companyCell b{display:block}
+    .companyCell small{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.3;
+      max-width: 52ch;
+    }
+
+    .mono{font-family:var(--mono)}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px; color:var(--muted)}
+    .nowrap{white-space:nowrap}
+
+    /* Modal */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(17,24,39,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:100;
+    }
+    .overlay.open{display:flex}
+    .modal{
+      width:min(980px, 100%);
+      max-height: min(85vh, 860px);
+      overflow:hidden;
+      background: var(--surface);
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 30px 80px rgba(17,24,39,.25);
+      display:flex;
+      flex-direction:column;
+    }
+    .modalHd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      background: var(--surface-2);
+    }
+    .modalHd h3{
+      margin:0;
+      font-size:16px;
+      letter-spacing:-.01em;
+    }
+    .modalHd .sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .modalActions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .modalBd{
+      padding:14px 16px;
+      overflow:auto;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      padding:7px 10px;
+      font-size:12px;
+      color:var(--muted);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .tab.active{
+      background: rgba(79,70,229,.10);
+      border-color: rgba(79,70,229,.25);
+      color:#1f1c7a;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap:12px;
+    }
+    .panel{
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding:12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .panel h4{
+      margin:0 0 8px;
+      font-size:12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .list{
+      margin:0;
+      padding-left:18px;
+      color: var(--text);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .list li{margin:8px 0}
+    .kpis{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    /* Drafts page layout */
+    .draftsLayout{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    .sideList{
+      max-height: calc(100vh - 220px);
+      overflow:auto;
+      padding:10px;
+      border-right:1px solid var(--border);
+    }
+    .draftRow{
+      border:1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding:10px;
+      cursor:pointer;
+      box-shadow: var(--shadow-sm);
+      margin-bottom:10px;
+    }
+    .draftRow:hover{border-color: rgba(79,70,229,.35)}
+    .draftRow.active{
+      outline: 2px solid rgba(79,70,229,.25);
+      outline-offset: 0;
+      background: rgba(79,70,229,.06);
+    }
+    .draftRowTop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+    .draftRowTitle{
+      font-weight:900;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 220px;
+    }
+    .draftRowSub{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.25;
+    }
+
+    .editor{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .controlsRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    .field{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      padding:10px;
+    }
+    .field label{
+      display:block;
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:6px;
+    }
+    select, input[type="text"]{
+      width:100%;
+      border:1px solid var(--border);
+      background: #ffffff;
+      border-radius: 12px;
+      padding:10px 10px;
+      outline:none;
+      font-size:13px;
+    }
+    textarea{
+      width:100%;
+      min-height: 360px;
+      resize: vertical;
+      border:1px solid var(--border);
+      background: #ffffff;
+      border-radius: 16px;
+      padding:12px;
+      outline:none;
+      font-size:13px;
+      line-height:1.45;
+      box-shadow: var(--shadow-sm);
+    }
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .alertsInner{flex-wrap:wrap; gap:10px}
+      .alertsRight{justify-content:stretch}
+      .search{min-width: 240px}
+      .alertStrip{max-width: 100%}
+      .grid2{grid-template-columns:1fr}
+      .draftsLayout{grid-template-columns:1fr}
+      .sideList{max-height: none; border-right:none; border-bottom:1px solid var(--border)}
+      .controlsRow{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <!-- FULL-WIDTH STICKY ALERTS BAR -->
+    <div class="alertsBar">
+      <div class="alertsInner">
+        <div class="alertsLeft">
+          <div class="brandMark"></div>
+          <div class="brandText">
+            <b>NEA Tracking • Outreach Agent</b>
+            <span>Shared company + signals + relationship database</span>
+          </div>
+        </div>
+
+        <div class="alertsRight">
+          <div class="nav" id="nav">
+            <a href="#/companies" data-route="companies" class="active">Companies</a>
+            <a href="#/drafts" data-route="drafts">Drafts</a>
+          </div>
+
+          <div class="pill">
+            Cadence: <b>Mon–Fri</b> <span class="muted">•</span> Next refresh <span class="mono">08:00</span>
+          </div>
+
+          <div class="search" title="Search tracked companies">
+            <span class="muted">⌕</span>
+            <input id="search" placeholder="Search companies, industries, stages…"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horizontal alerts strip -->
+      <div class="alertsInner" style="padding-top:0; padding-bottom:12px;">
+        <div class="pill">
+          <span class="dot" style="background:var(--info)"></span>
+          Alerts (suggested): <b id="alertCount">0</b>
+        </div>
+
+        <div class="alertStrip" id="alerts"></div>
+
+        <button class="btn primary" id="regenDraftsTop">Regenerate Drafts</button>
+      </div>
+    </div>
+
+    <!-- PAGES -->
+    <div class="container">
+      <!-- Companies Page -->
+      <section id="page-companies">
+        <div class="pageHeader">
+          <div>
+            <h1>Tracked Companies</h1>
+            <p>Click a row or alert to open the company record. The record is a popup so you can stay in the database view.</p>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn" id="openProfile">Investor: <b id="investorName">A. Investor</b></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHd">
+            <div class="title">
+              <h2>Database</h2>
+              <span class="tag good"><span class="dot"></span>Suggested</span>
+              <span class="tag warn"><span class="dot"></span>Deferred</span>
+              <span class="tag bad"><span class="dot"></span>Not suggested</span>
+            </div>
+            <div class="title">
+              <span class="tag info"><span class="dot"></span>Total tracked: <b id="companyCount">0</b></span>
+            </div>
+          </div>
+          <div class="cardBd tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Industry</th>
+                  <th>Stage</th>
+                  <th>Outreach</th>
+                  <th>Recent signals</th>
+                  <th>Last interaction</th>
+                </tr>
+              </thead>
+              <tbody id="companyTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drafts Page -->
+      <section id="page-drafts" style="display:none;">
+        <div class="pageHeader">
+          <div>
+            <h1>Drafting Workspace</h1>
+            <p>Drafts are generated for suggested/deferred companies. Edit, request variants, and save per-investor preferences.</p>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span class="tag info"><span class="dot"></span>No auto-send</span>
+            <button class="btn primary" id="copyDraft">Copy</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHd">
+            <div class="title">
+              <h2>Drafts</h2>
+              <div class="tabs" style="margin:0;">
+                <button class="tab active" data-filter="suggested">Suggested</button>
+                <button class="tab" data-filter="all">All</button>
+                <button class="tab" data-filter="deferred">Deferred</button>
+              </div>
+            </div>
+            <div class="title">
+              <button class="btn" id="markSent">Mark as Sent</button>
+              <button class="btn" id="snooze">Snooze</button>
+              <button class="btn" id="requestNew">Request Variant</button>
+            </div>
+          </div>
+
+          <div class="cardBd draftsLayout">
+            <div>
+              <div class="field" style="margin-bottom:10px;">
+                <label>Jump to company</label>
+                <select id="draftCompanyJump"></select>
+              </div>
+              <div class="sideList" id="draftList"></div>
+            </div>
+
+            <div class="editor">
+              <div class="controlsRow">
+                <div class="field">
+                  <label>Tone</label>
+                  <select id="tone">
+                    <option value="direct">Direct</option>
+                    <option value="warm">Warm</option>
+                    <option value="formal">Formal</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Voice</label>
+                  <select id="voice">
+                    <option value="me">Match my historical style</option>
+                    <option value="nea">NEA house style</option>
+                    <option value="minimal">Ultra-minimal</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Formality</label>
+                  <select id="formality">
+                    <option value="low">Low</option>
+                    <option value="med" selected>Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Agent memory (per-investor)</label>
+                <input id="remember" type="text" placeholder="e.g., Keep under 90 words. Avoid name-dropping unless direct connection."/>
+                <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+                  <button class="btn primary" id="savePrefs">Remember settings</button>
+                  <span class="hint" id="prefsStatus">Not saved</span>
+                </div>
+              </div>
+
+              <textarea id="draftText" placeholder="Select a draft to edit…"></textarea>
+              <div class="hint">
+                Tip: Open a company record from the Companies page and click <b>Open Drafts</b> to land here with that company preselected.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- COMPANY RECORD MODAL -->
+    <div class="overlay" id="overlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modalHd">
+          <div>
+            <h3 id="modalTitle">Company Record</h3>
+            <div class="sub" id="modalSub">Select a company to view details.</div>
+            <div class="tabs" id="recordTabs">
+              <button class="tab active" data-tab="overview">Overview</button>
+              <button class="tab" data-tab="signals">Signals</button>
+              <button class="tab" data-tab="relationships">Relationships</button>
+              <button class="tab" data-tab="interactions">Interactions</button>
+            </div>
+          </div>
+
+          <div class="modalActions">
+            <span class="tag info" id="modalBadge"><span class="dot"></span>—</span>
+            <button class="btn" id="toggleOutreach">Toggle status</button>
+            <button class="btn primary" id="openDraftsFromModal">Open Drafts</button>
+            <button class="btn ghost" id="closeModal">✕</button>
+          </div>
+        </div>
+
+        <div class="modalBd" id="companyDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    // Mock data (same spirit as yours)
+    // -------------------------
+    const investors = {
+      "A. Investor": { tone:"direct", voice:"me",  formality:"med", memory:"Keep it crisp. Ask for 20 min. Use 1 credibility hook max." },
+      "B. Investor": { tone:"warm",   voice:"nea", formality:"med", memory:"Friendly opener. Prefer warm references. Avoid 'hope you're well'." },
+      "C. Investor": { tone:"formal", voice:"nea", formality:"high", memory:"More formal. Include firm name. Avoid slang." }
+    };
+
+    const companies = [
+      {
+        id:"atlas",
+        name:"Atlas Robotics",
+        industry:"Industrial Automation",
+        stage:"Series A",
+        outreach:{status:"suggested", horizon:"short", confidence:"high"},
+        summary:"Warehouse robotics platform with early enterprise traction.",
+        signals:[
+          {type:"Talent", text:"CTO hired from Amazon Robotics", when:"2d"},
+          {type:"Hiring", text:"11 engineering roles posted in 30 days", when:"5d"},
+          {type:"Competitive", text:"Key competitor raised Series B", when:"7d"}
+        ],
+        relationships:[
+          {who:"Portfolio CEO (Flexport)", degree:"2nd", note:"Mutual operator network"},
+          {who:"NEA Partner — J. Doe", degree:"direct", note:"Met founder at conference"}
+        ],
+        interactions:[
+          {date:"2025-11-18", channel:"Meeting", initiator:"NEA", outcome:"Follow-up requested", owner:"A. Investor"},
+          {date:"2025-10-02", channel:"Email", initiator:"NEA", outcome:"Replied, scheduled intro", owner:"A. Investor"}
+        ],
+        drafts:[
+          {id:"atlas-d1", label:"Direct", status:"suggested", text:
+`Subject: Quick catch-up?
+
+Hi Alex —
+
+Noticed the recent CTO hire and hiring momentum since we last spoke. Would love to reconnect for 20 minutes to hear where priorities have shifted and what you’re optimizing for next.
+
+Best,
+A. Investor`
+          },
+          {id:"atlas-d2", label:"Warm reference", status:"suggested", text:
+`Subject: Reconnecting
+
+Hi Alex —
+
+We were recently talking with the Flexport team about warehouse automation trends, and your work at Atlas came up. Would be great to catch up for 20 minutes and hear how things are evolving since our last conversation.
+
+Best,
+A. Investor`
+          }
+        ]
+      },
+      {
+        id:"helio",
+        name:"Helio Health",
+        industry:"Digital Health",
+        stage:"Seed",
+        outreach:{status:"deferred", horizon:"medium", confidence:"med"},
+        summary:"Remote monitoring + diagnostics for chronic conditions.",
+        signals:[
+          {type:"Product", text:"Launched clinician dashboard v2", when:"3d"},
+          {type:"Hiring", text:"First GTM hire posted", when:"10d"}
+        ],
+        relationships:[
+          {who:"NEA Associate — L. Kim", degree:"direct", note:"Connected to founder via Stanford"},
+        ],
+        interactions:[
+          {date:"2025-08-14", channel:"Email", initiator:"Founder", outcome:"Inbound — requested meeting", owner:"B. Investor"},
+          {date:"2025-08-20", channel:"Meeting", initiator:"NEA", outcome:"Too early; revisit in Q1", owner:"B. Investor"}
+        ],
+        drafts:[
+          {id:"helio-d1", label:"Re-engagement", status:"deferred", text:
+`Subject: Checking in
+
+Hi Maya —
+
+We last chatted in August and agreed it was a bit early. I saw the dashboard update and the GTM hire — seems like things are moving. Would it be helpful to reconnect for 20 minutes to hear what’s changed?
+
+Best,
+B. Investor`
+          }
+        ]
+      },
+      {
+        id:"northpeak",
+        name:"NorthPeak Security",
+        industry:"Cybersecurity",
+        stage:"Series B",
+        outreach:{status:"not", horizon:"long", confidence:"high"},
+        summary:"Identity security platform; strong incumbent dynamics.",
+        signals:[
+          {type:"Press", text:"Featured in major industry report", when:"6d"}
+        ],
+        relationships:[
+          {who:"No strong Swarm edges found", degree:"—", note:""}
+        ],
+        interactions:[
+          {date:"2025-05-03", channel:"Email", initiator:"NEA", outcome:"No response", owner:"C. Investor"},
+        ],
+        drafts:[
+          {id:"northpeak-d1", label:"Cold", status:"not", text:
+`Subject: Intro
+
+Hi Jordan —
+
+I’m reaching out from NEA. We’ve been tracking identity security and your work at NorthPeak stands out. If helpful, I’d welcome a brief intro to learn how you’re approaching the next phase of growth.
+
+Best,
+C. Investor`
+          }
+        ]
+      },
+      {
+        id:"lattice",
+        name:"Lattice Compute",
+        industry:"AI Infrastructure",
+        stage:"Series A",
+        outreach:{status:"suggested", horizon:"short", confidence:"med"},
+        summary:"Inference optimization for enterprise AI workloads.",
+        signals:[
+          {type:"Funding", text:"Rumored raise in progress", when:"1d"},
+          {type:"Talent", text:"Eng lead joined from NVIDIA", when:"4d"}
+        ],
+        relationships:[
+          {who:"NEA Principal — S. Patel", degree:"2nd", note:"Worked with founder previously"},
+          {who:"Portfolio CTO", degree:"2nd", note:"Overlapping open-source community"}
+        ],
+        interactions:[
+          {date:"2025-12-07", channel:"Slack", initiator:"NEA", outcome:"Light touch; no meeting set", owner:"A. Investor"}
+        ],
+        drafts:[
+          {id:"lattice-d1", label:"Timing-sensitive", status:"suggested", text:
+`Subject: Quick question re: next steps
+
+Hi Priya —
+
+We’ve been tracking Lattice’s work in inference optimization and noticed signals that you may be considering a round. If you’re open to it, I’d love to compare notes and hear what you’re prioritizing this quarter.
+
+Best,
+A. Investor`
+          }
+        ]
+      }
+    ];
+
+    // -------------------------
+    // State
+    // -------------------------
+    let selectedCompanyId = companies[0].id;
+    let selectedInvestor = "A. Investor";
+    let activeDraftId = null;
+    let draftFilter = "suggested";
+    let recordTab = "overview";
+
+    // -------------------------
+    // Helpers
+    // -------------------------
+    const $ = (id) => document.getElementById(id);
+
+    function getCompany(id){ return companies.find(c=>c.id===id); }
+
+    function statusLabel(status){
+      if(status === "suggested") return "Outreach Suggested";
+      if(status === "deferred") return "Deferred";
+      if(status === "not") return "Not Suggested";
+      return status;
+    }
+
+    function tagClass(status){
+      if(status === "suggested") return "good";
+      if(status === "deferred") return "warn";
+      if(status === "not") return "bad";
+      return "info";
+    }
+
+    function fmtSignals(sigs){
+      const slice = sigs.slice(0,2).map(s=>`${s.type}: ${s.text}`).join(" • ");
+      return slice + (sigs.length>2 ? ` • +${sigs.length-2} more` : "");
+    }
+
+    function lastInteraction(interactions){
+      if(!interactions || interactions.length===0) return "—";
+      const last = interactions[0];
+      return `${last.date} • ${last.channel} • ${last.outcome}`;
+    }
+
+    function applyInvestorPrefsToUI(){
+      const prefs = investors[selectedInvestor];
+      $("investorName").textContent = selectedInvestor;
+      $("tone").value = prefs.tone;
+      $("voice").value = prefs.voice;
+      $("formality").value = prefs.formality;
+      $("remember").value = prefs.memory || "";
+      $("prefsStatus").textContent = "Loaded";
+    }
+
+    function replaceSignature(text){
+      return (text || "")
+        .replaceAll("A. Investor", selectedInvestor)
+        .replaceAll("B. Investor", selectedInvestor)
+        .replaceAll("C. Investor", selectedInvestor);
+    }
+
+    // -------------------------
+    // Routing (2 pages in one file)
+    // -------------------------
+    function setRoute(route){
+      // nav state
+      document.querySelectorAll("#nav a").forEach(a=>{
+        a.classList.toggle("active", a.dataset.route === route);
+      });
+
+      $("page-companies").style.display = route === "companies" ? "" : "none";
+      $("page-drafts").style.display = route === "drafts" ? "" : "none";
+
+      // search input should still filter companies table even if on drafts:
+      // (we keep it enabled; only applied on companies page)
+      if(route === "drafts"){
+        renderDraftCompanyJump();
+        renderDraftList();
+      }
+    }
+
+    function router(){
+      const hash = location.hash || "#/companies";
+      const route = hash.startsWith("#/drafts") ? "drafts" : "companies";
+      setRoute(route);
+      // optional company deep link: #/drafts?company=atlas
+      if(route === "drafts"){
+        const companyId = new URLSearchParams(hash.split("?")[1] || "").get("company");
+        if(companyId && getCompany(companyId)){
+          selectedCompanyId = companyId;
+        }
+        // open first draft if present
+        const c = getCompany(selectedCompanyId);
+        if(c?.drafts?.length){
+          activeDraftId = c.drafts[0].id;
+          $("draftText").value = replaceSignature(c.drafts[0].text);
+        }
+        renderDraftCompanyJump();
+        renderDraftList();
+      }
+    }
+
+    window.addEventListener("hashchange", router);
+
+    // -------------------------
+    // Alerts (full-width strip)
+    // -------------------------
+    function renderAlerts(){
+      const suggested = companies.filter(c=>c.outreach.status==="suggested");
+      $("alertCount").textContent = suggested.length;
+
+      const html = suggested.slice(0, 10).map(c=>{
+        const topSignal = c.signals[0];
+        return `
+          <div class="alertCard" data-company="${c.id}">
+            <div class="alertTop">
+              <div class="alertTitle" title="${c.name}">${c.name}</div>
+              <span class="tag ${tagClass(c.outreach.status)}"><span class="dot"></span>${c.outreach.horizon}</span>
+            </div>
+            <div class="alertMeta">${c.industry} • ${c.stage} • confidence: <b>${c.outreach.confidence}</b></div>
+            <div class="alertReason"><b>${topSignal.type}:</b> ${topSignal.text} <span class="muted">(${topSignal.when})</span></div>
+          </div>
+        `;
+      }).join("");
+
+      $("alerts").innerHTML = html || `<span class="tiny muted">No suggested alerts right now.</span>`;
+
+      document.querySelectorAll(".alertCard").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const id = el.dataset.company;
+          selectCompany(id);
+          openModal();
+        });
+      });
+    }
+
+    // -------------------------
+    // Companies table
+    // -------------------------
+    function renderTable(filterText=""){
+      const tbody = $("companyTable");
+      const rows = companies
+        .filter(c=>{
+          const t = filterText.toLowerCase().trim();
+          if(!t) return true;
+          return (c.name + " " + c.industry + " " + c.stage).toLowerCase().includes(t);
+        })
+        .map(c=>{
+          const selected = c.id===selectedCompanyId ? "selected" : "";
+          return `
+            <tr class="${selected}" data-company="${c.id}">
+              <td class="companyCell">
+                <b>${c.name}</b>
+                <small>${c.summary}</small>
+              </td>
+              <td>${c.industry}</td>
+              <td class="nowrap">${c.stage}</td>
+              <td>
+                <span class="tag ${tagClass(c.outreach.status)}"><span class="dot"></span>${statusLabel(c.outreach.status)}</span>
+                <div class="tiny">horizon: <b>${c.outreach.horizon}</b> • confidence: <b>${c.outreach.confidence}</b></div>
+              </td>
+              <td class="tiny">${fmtSignals(c.signals)}</td>
+              <td class="tiny">${lastInteraction(c.interactions)}</td>
+            </tr>
+          `;
+        }).join("");
+
+      tbody.innerHTML = rows;
+      $("companyCount").textContent = companies.length;
+
+      document.querySelectorAll("#companyTable tr").forEach(tr=>{
+        tr.addEventListener("click", ()=>{
+          const id = tr.dataset.company;
+          selectCompany(id);
+          openModal();
+        });
+      });
+    }
+
+    // -------------------------
+    // Modal (Company Record)
+    // -------------------------
+    function openModal(){ $("overlay").classList.add("open"); }
+    function closeModal(){ $("overlay").classList.remove("open"); }
+
+    function renderModal(){
+      const c = getCompany(selectedCompanyId);
+      if(!c) return;
+
+      $("modalTitle").textContent = c.name;
+      $("modalSub").textContent = `${c.industry} • ${c.stage} • ${c.summary}`;
+
+      $("modalBadge").className = `tag ${tagClass(c.outreach.status)}`;
+      $("modalBadge").innerHTML = `<span class="dot"></span>${statusLabel(c.outreach.status)} • ${c.outreach.horizon} • conf: ${c.outreach.confidence}`;
+
+      // Tabs
+      document.querySelectorAll("#recordTabs .tab").forEach(t=>{
+        t.classList.toggle("active", t.dataset.tab === recordTab);
+      });
+
+      // Content by tab
+      const signalsHtml = c.signals.map(s=>`<li><b>${s.type}</b> — ${s.text} <span class="muted">(${s.when})</span></li>`).join("");
+      const relHtml = c.relationships.map(r=>`<li><b>${r.who}</b> <span class="muted">(${r.degree})</span> — ${r.note || ""}</li>`).join("");
+      const interRows = c.interactions.map(i=>`
+        <tr>
+          <td class="tiny mono">${i.date}</td>
+          <td class="tiny">${i.channel}</td>
+          <td class="tiny"><b>${i.initiator}</b></td>
+          <td class="tiny">${i.outcome}</td>
+          <td class="tiny muted">${i.owner}</td>
+        </tr>
+      `).join("");
+
+      let body = "";
+
+      if(recordTab === "overview"){
+        body = `
+          <div class="grid2">
+            <div class="panel">
+              <h4>Agent recommendation</h4>
+              <div class="kpis">
+                <span class="tag ${tagClass(c.outreach.status)}"><span class="dot"></span>${statusLabel(c.outreach.status)}</span>
+                <span class="tag info"><span class="dot"></span>horizon: <b>${c.outreach.horizon}</b></span>
+                <span class="tag info"><span class="dot"></span>confidence: <b>${c.outreach.confidence}</b></span>
+              </div>
+              <p class="hint" style="margin-top:10px;">
+                Recommendation updates continuously using signals, relationship graph (“Swarm”), and prior interactions.
+              </p>
+            </div>
+
+            <div class="panel">
+              <h4>Quick context</h4>
+              <ul class="list">
+                <li><b>Last interaction:</b> ${lastInteraction(c.interactions)}</li>
+                <li><b>Top signal:</b> ${c.signals[0].type} — ${c.signals[0].text}</li>
+                <li><b>Relationship edge:</b> ${c.relationships?.[0]?.who || "—"}</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h4>Recent signals</h4>
+              <ul class="list">${signalsHtml || "<li class='muted'>None</li>"}</ul>
+            </div>
+
+            <div class="panel">
+              <h4>Relationships (Swarm)</h4>
+              <ul class="list">${relHtml || "<li class='muted'>None</li>"}</ul>
+            </div>
+          </div>
+        `;
+      }
+
+      if(recordTab === "signals"){
+        body = `
+          <div class="panel">
+            <h4>Signals</h4>
+            <ul class="list">${signalsHtml || "<li class='muted'>None</li>"}</ul>
+          </div>
+        `;
+      }
+
+      if(recordTab === "relationships"){
+        body = `
+          <div class="panel">
+            <h4>Relationships</h4>
+            <ul class="list">${relHtml || "<li class='muted'>None</li>"}</ul>
+          </div>
+        `;
+      }
+
+      if(recordTab === "interactions"){
+        body = `
+          <div class="panel">
+            <h4>Previous interactions</h4>
+            <div style="overflow:auto;">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left; padding:10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);">Date</th>
+                    <th style="text-align:left; padding:10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);">Channel</th>
+                    <th style="text-align:left; padding:10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);">Initiator</th>
+                    <th style="text-align:left; padding:10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);">Outcome</th>
+                    <th style="text-align:left; padding:10px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--border);">Owner</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${interRows || `<tr><td colspan="5" class="tiny muted" style="padding:10px;">No logged interactions.</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      $("companyDetail").innerHTML = body;
+    }
+
+    function selectCompany(id){
+      selectedCompanyId = id;
+      renderTable($("search").value);
+      renderModal();
+    }
+
+    function toggleOutreachStatus(){
+      const c = getCompany(selectedCompanyId);
+      if(!c) return;
+      const order = ["suggested","deferred","not"];
+      const idx = order.indexOf(c.outreach.status);
+      c.outreach.status = order[(idx+1)%order.length];
+      c.outreach.horizon = c.outreach.status==="suggested" ? "short" : c.outreach.status==="deferred" ? "medium" : "long";
+      renderAlerts();
+      renderTable($("search").value);
+      renderModal();
+      renderDraftList();
+    }
+
+    // -------------------------
+    // Drafts page
+    // -------------------------
+    function allDrafts(){
+      const list = [];
+      companies.forEach(c=>{
+        c.drafts.forEach(d=>{
+          list.push({ ...d, companyId:c.id, companyName:c.name, outreachStatus:c.outreach.status });
+        });
+      });
+      return list;
+    }
+
+    function renderDraftCompanyJump(){
+      const options = companies.map(c=>{
+        const selected = c.id === selectedCompanyId ? "selected" : "";
+        return `<option value="${c.id}" ${selected}>${c.name}</option>`;
+      }).join("");
+      $("draftCompanyJump").innerHTML = options;
+    }
+
+    function renderDraftList(){
+      // if not on drafts page, no-op
+      if(($("page-drafts").style.display || "") === "none") return;
+
+      const drafts = allDrafts().filter(d=>{
+        if(draftFilter==="all") return true;
+        if(draftFilter==="suggested") return d.outreachStatus==="suggested";
+        if(draftFilter==="deferred") return d.outreachStatus==="deferred";
+        return true;
+      }).filter(d=>{
+        // optionally keep list near selected company first, but include all
+        return true;
+      });
+
+      // Sort so selected company appears first
+      drafts.sort((a,b)=>{
+        const aIs = a.companyId===selectedCompanyId ? -1 : 0;
+        const bIs = b.companyId===selectedCompanyId ? -1 : 0;
+        if(aIs !== bIs) return aIs - bIs;
+        return a.companyName.localeCompare(b.companyName);
+      });
+
+      const html = drafts.map(d=>{
+        const active = d.id === activeDraftId ? "active" : "";
+        const subjectLine = (d.text.split("\n")[0] || "").replace("Subject:","").trim();
+        return `
+          <div class="draftRow ${active}" data-draft="${d.id}">
+            <div class="draftRowTop">
+              <div class="draftRowTitle" title="${d.companyName}">${d.companyName}</div>
+              <span class="tag ${tagClass(d.outreachStatus)}"><span class="dot"></span>${statusLabel(d.outreachStatus)}</span>
+            </div>
+            <div class="draftRowSub"><b>${d.label}</b> • ${subjectLine || "Draft"}</div>
+          </div>
+        `;
+      }).join("");
+
+      $("draftList").innerHTML = html || `<div class="tiny muted">No drafts in this view.</div>`;
+
+      document.querySelectorAll(".draftRow").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          activeDraftId = el.dataset.draft;
+          const d = allDrafts().find(x=>x.id===activeDraftId);
+          selectedCompanyId = d.companyId;
+          $("draftCompanyJump").value = selectedCompanyId;
+          $("draftText").value = replaceSignature(d.text);
+          renderDraftList();
+        });
+      });
+    }
+
+    // -------------------------
+    // Wiring
+    // -------------------------
+    document.addEventListener("DOMContentLoaded", ()=>{
+      $("companyCount").textContent = companies.length;
+
+      // initial render
+      renderAlerts();
+      renderTable();
+      applyInvestorPrefsToUI();
+      renderModal();
+
+      // default route
+      if(!location.hash) location.hash = "#/companies";
+      router();
+
+      // search (companies table only)
+      $("search").addEventListener("input", (e)=>{
+        renderTable(e.target.value);
+      });
+
+      // investor switch (cycle)
+      $("openProfile").addEventListener("click", ()=>{
+        const names = Object.keys(investors);
+        const i = names.indexOf(selectedInvestor);
+        selectedInvestor = names[(i+1)%names.length];
+        applyInvestorPrefsToUI();
+
+        // refresh draft text with new signature if open
+        if(activeDraftId){
+          const d = allDrafts().find(x=>x.id===activeDraftId);
+          if(d) $("draftText").value = replaceSignature(d.text);
+        }
+      });
+
+      // modal close
+      $("closeModal").addEventListener("click", closeModal);
+      $("overlay").addEventListener("click", (e)=>{
+        if(e.target === $("overlay")) closeModal();
+      });
+      document.addEventListener("keydown", (e)=>{
+        if(e.key === "Escape") closeModal();
+      });
+
+      // modal tabs
+      document.querySelectorAll("#recordTabs .tab").forEach(tab=>{
+        tab.addEventListener("click", ()=>{
+          recordTab = tab.dataset.tab;
+          renderModal();
+        });
+      });
+
+      // toggle outreach status
+      $("toggleOutreach").addEventListener("click", toggleOutreachStatus);
+
+      // open drafts from modal
+      $("openDraftsFromModal").addEventListener("click", ()=>{
+        closeModal();
+        location.hash = `#/drafts?company=${encodeURIComponent(selectedCompanyId)}`;
+      });
+
+      // drafts top regenerate (simple mock)
+      $("regenDraftsTop").addEventListener("click", ()=>{
+        const c = getCompany(selectedCompanyId);
+        if(!c) return;
+        const prefs = investors[selectedInvestor];
+        const snippet = prefs.memory ? `\n\n[Agent memory: ${prefs.memory}]` : "";
+        c.drafts.unshift({
+          id: `${c.id}-gen-${Date.now()}`,
+          label: `Variant (${prefs.tone}/${prefs.formality})`,
+          status: c.outreach.status === "suggested" ? "suggested" : "deferred",
+          text:
+`Subject: Quick intro
+
+Hi —
+
+Reaching out from NEA. We’ve been tracking ${c.name} and the recent updates caught our attention. If useful, would you be open to a quick 20 minutes to compare notes?
+
+Best,
+${selectedInvestor}${snippet}`
+        });
+        renderAlerts();
+        renderTable($("search").value);
+        renderModal();
+        // if on drafts page, refresh list
+        renderDraftList();
+      });
+
+      // drafts tabs
+      document.querySelectorAll("#page-drafts .tab").forEach(tab=>{
+        tab.addEventListener("click", ()=>{
+          document.querySelectorAll("#page-drafts .tab").forEach(t=>t.classList.remove("active"));
+          tab.classList.add("active");
+          draftFilter = tab.dataset.filter;
+          renderDraftList();
+        });
+      });
+
+      // drafts company jump
+      $("draftCompanyJump").addEventListener("change", ()=>{
+        selectedCompanyId = $("draftCompanyJump").value;
+        const c = getCompany(selectedCompanyId);
+        if(c?.drafts?.length){
+          activeDraftId = c.drafts[0].id;
+          $("draftText").value = replaceSignature(c.drafts[0].text);
+        } else {
+          activeDraftId = null;
+          $("draftText").value = "";
+        }
+        renderDraftList();
+      });
+
+      // remember settings
+      $("savePrefs").addEventListener("click", ()=>{
+        investors[selectedInvestor].tone = $("tone").value;
+        investors[selectedInvestor].voice = $("voice").value;
+        investors[selectedInvestor].formality = $("formality").value;
+        investors[selectedInvestor].memory = $("remember").value;
+        $("prefsStatus").textContent = "Saved ✓";
+        setTimeout(()=> $("prefsStatus").textContent = "Saved", 900);
+      });
+
+      // request variant
+      $("requestNew").addEventListener("click", ()=>{
+        const c = getCompany(selectedCompanyId);
+        if(!c) return;
+        const rel = c.relationships?.[0]?.who || "a mutual connection";
+        c.drafts.unshift({
+          id: `${c.id}-req-${Date.now()}`,
+          label:"Warm reference (requested)",
+          status: c.outreach.status==="suggested" ? "suggested" : "deferred",
+          text:
+`Subject: Quick reconnect
+
+Hi —
+
+We recently spoke with ${rel} and your work at ${c.name} came up. Would love to reconnect for 20 minutes to hear what’s changed and where you’re focused now.
+
+Best,
+${selectedInvestor}`
+        });
+        activeDraftId = c.drafts[0].id;
+        $("draftText").value = replaceSignature(c.drafts[0].text);
+        renderDraftList();
+      });
+
+      // copy draft
+      $("copyDraft").addEventListener("click", async ()=>{
+        const text = $("draftText").value;
+        if(!text) return;
+        try{
+          await navigator.clipboard.writeText(text);
+          $("copyDraft").textContent = "Copied ✓";
+          setTimeout(()=> $("copyDraft").textContent = "Copy", 900);
+        }catch(e){
+          alert("Copy failed in this browser context. Select text and copy manually.");
+        }
+      });
+
+      // mark sent (log interaction)
+      $("markSent").addEventListener("click", ()=>{
+        const c = getCompany(selectedCompanyId);
+        if(!c) return;
+        c.interactions.unshift({
+          date: new Date().toISOString().slice(0,10),
+          channel:"Email",
+          initiator:"NEA",
+          outcome:"Sent outreach (drafted via agent)",
+          owner: selectedInvestor
+        });
+        renderModal();
+        renderTable($("search").value);
+      });
+
+      // snooze (set deferred)
+      $("snooze").addEventListener("click", ()=>{
+        const c = getCompany(selectedCompanyId);
+        if(!c) return;
+        c.outreach.status = "deferred";
+        c.outreach.horizon = "medium";
+        renderAlerts();
+        renderTable($("search").value);
+        renderModal();
+        renderDraftList();
+      });
+
+      // selecting initial company
+      selectCompany(selectedCompanyId);
+    });
+  </script>
+</body>
+</html>
